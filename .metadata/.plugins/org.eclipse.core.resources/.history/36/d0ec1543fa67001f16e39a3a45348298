@@ -1,0 +1,118 @@
+package br.ce.wcaquino.secao3;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
+
+public class TestCadastro {
+
+	@Test
+	public void deveEfetuarUmCadastro() {
+
+		WebDriver driver = new ChromeDriver();
+		driver.manage().window().setSize(new Dimension(1200, 765));
+		String pathUrl = System.getProperty("user.dir") + "\\src\\main\\resources\\componentes.html";
+		driver.get(pathUrl);
+
+		driver.findElement(By.id("elementosForm:nome")).sendKeys("Wagner");
+		driver.findElement(By.id("elementosForm:sobrenome")).sendKeys("Aquino");
+		driver.findElement(By.id("elementosForm:sexo:0")).click();
+		driver.findElement(By.id("elementosForm:comidaFavorita:2")).click();
+		new Select(driver.findElement(By.id("elementosForm:escolaridade"))).selectByVisibleText("Mestrado");
+		new Select(driver.findElement(By.id("elementosForm:esportes"))).selectByVisibleText("Natacao");
+		driver.findElement(By.id("elementosForm:cadastrar")).click();
+
+		String texto = driver.findElement(By.id("resultado")).getText();
+		Assert.assertEquals("Cadastrado!" , texto.split("\n")[0]);
+		texto = driver.findElement(By.id("descNome")).getText();
+		Assert.assertTrue(texto.contains("Wagner"));
+		texto = driver.findElement(By.id("descSobrenome")).getText();
+		Assert.assertTrue(texto.contains("Aquino"));
+		texto = driver.findElement(By.id("descSexo")).getText();
+		Assert.assertTrue(texto.contains("Masculino"));
+		texto = driver.findElement(By.id("descComida")).getText();
+		Assert.assertTrue(texto.contains("Pizza"));
+		texto = driver.findElement(By.id("descEscolaridade")).getText();
+		Assert.assertTrue(texto.contains("mestrado"));
+		texto = driver.findElement(By.id("descEsportes")).getText();
+		Assert.assertTrue(texto.contains("Natacao"));
+
+		driver.quit();
+	}
+
+	@Test
+	public void deveValidarCamposObrigatorios() {
+
+		WebDriver driver = new ChromeDriver();
+		driver.manage().window().setSize(new Dimension(1200, 765));
+		String pathUrl = System.getProperty("user.dir") + "\\src\\main\\resources\\componentes.html";
+		driver.get(pathUrl);
+
+		driver.findElement(By.id("elementosForm:cadastrar")).click();
+		
+		//Mudar o foco pro alert
+		Alert alert = driver.switchTo().alert();
+		//Verificar campo nome
+		this.verificarNome(alert);
+		
+		//Verificar campo sobrenome
+		this.verificarSobrenome(driver, alert);
+		
+		//Verificar sexo
+		this.verificarValidarSeSexoObrigatorio(driver, alert);
+
+		//Verificar se eh vegetariano
+		this.verificarSeEhVegetariano(driver, alert);
+
+		//Verificar esportista indeciso
+	}
+	
+	private void verificarNome(Alert alert) {
+		Assert.assertEquals("Nome eh obrigatorio", alert.getText());
+		alert.accept();
+	}
+
+	private void verificarSobrenome(WebDriver driver, Alert alert) {
+		driver.findElement(By.id("elementosForm:nome")).sendKeys("Sobrenome qualquer");
+		driver.findElement(By.id("elementosForm:cadastrar")).click();
+		alert = driver.switchTo().alert();
+		Assert.assertEquals("Sobrenome eh obrigatorio", alert.getText());
+		alert.accept();
+	}
+	
+	private void verificarValidarSeSexoObrigatorio(WebDriver driver, Alert alert) {
+		driver.findElement(By.id("elementosForm:sobrenome")).sendKeys("Sobrenome qualquer");
+		driver.findElement(By.id("elementosForm:cadastrar")).click();
+		alert = driver.switchTo().alert();
+		Assert.assertEquals("Sexo eh obrigatorio", alert.getText());
+		alert.accept();
+	}
+
+	private void verificarSeEhVegetariano(WebDriver driver, Alert alert) {
+		driver.findElement(By.id("elementosForm:sexo:1")).click();
+		driver.findElement(By.id("elementosForm:comidaFavorita:0")).click();
+		driver.findElement(By.id("elementosForm:comidaFavorita:3")).click();
+		driver.findElement(By.id("elementosForm:cadastrar")).click();
+
+		alert = driver.switchTo().alert();
+		Assert.assertEquals("Tem certeza que voce eh vegetariano?", alert.getText());
+		alert.accept();
+	}
+
+	private void verificarValidarEsportistaIndeciso(WebDriver driver, Alert alert) {
+		
+		Select combo = new Select(driver.findElement(By.id("elementosForm:esportes")));
+		combo.selectByVisibleText("Karate");
+		combo.selectByVisibleText("O que eh esporte?");
+		driver.findElement(By.id("elementosForm:cadastrar")).click();
+		
+		alert = driver.switchTo().alert();
+		Assert.assertEquals("Voce faz esporte ou nao?", alert.getText());
+		alert.accept();
+	}
+}
